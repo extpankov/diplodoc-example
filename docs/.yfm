@@ -1,3 +1,5 @@
+allowHTML: true
+
 langs: ['ru', 'en']
 
 docs-viewer:
