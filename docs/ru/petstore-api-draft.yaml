@@ -1,0 +1,154 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Swagger Petstore Draft
+  license:
+    name: MIT
+  description: |
+    OpenAPI-спецификация для Petstore API. Позволяет получать список питомцев,
+    создавать новых и просматривать информацию по ID. Используется в двух окружениях: продакшн и тест.
+
+    ⚠️ Для доступа к API передайте API-ключ в заголовке `X-API-Key`.
+
+servers:
+  - url: http://petstore.swagger.io/v1
+    description: Продакшн-сервер
+  - url: https://test.petstore.swagger.io/v1
+    description: Тестовое окружение
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор питомца
+        name:
+          type: string
+          description: Имя питомца
+        tag:
+          type: string
+          description: Метка или категория питомца
+
+    Pets:
+      type: array
+      maxItems: 100
+      items:
+        $ref: '#/components/schemas/Pet'
+      description: Массив питомцев
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: Код ошибки
+        message:
+          type: string
+          description: Сообщение об ошибке
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /pets:
+    get:
+      summary: Получить список питомцев
+      operationId: listPets
+      tags:
+        - pets
+      parameters:
+        - name: limit
+          in: query
+          description: Максимальное количество питомцев в ответе
+          required: false
+          schema:
+            type: integer
+            maximum: 100
+            format: int32
+      responses:
+        '200':
+          description: Успешный ответ со списком питомцев
+          headers:
+            x-next:
+              description: Ссылка на следующую страницу результатов
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pets'
+        default:
+          description: Неожиданная ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Создать нового питомца
+      operationId: createPets
+      tags:
+        - pets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '201':
+          description: Питомец успешно создан
+        default:
+          description: Неожиданная ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /pets/{petId}:
+    get:
+      summary: Получить информацию о питомце по ID
+      operationId: showPetById
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: Идентификатор питомца
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Информация о питомце
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '400':
+          description: Неверный запрос
+        '404':
+          description: Питомец не найден
+        default:
+          description: Неожиданная ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
